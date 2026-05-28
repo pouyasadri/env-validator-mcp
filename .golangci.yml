@@ -1,0 +1,57 @@
+run:
+  timeout: 5m
+  go: "1.25"
+
+linters:
+  enable:
+    # Correctness
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - unused
+    # Style
+    - revive
+    - gosimple
+    - gofmt
+    - goimports
+    # Safety
+    - gosec
+    - bodyclose
+    - noctx
+
+linters-settings:
+  errcheck:
+    # Ignore errors from fmt.* (common in tests/logging)
+    exclude-functions:
+      - fmt.Print
+      - fmt.Println
+      - fmt.Printf
+      - fmt.Fprintf
+      - fmt.Fprintln
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+      - name: var-naming
+        severity: warning
+  goimports:
+    local-prefixes: github.com/pouyasadri/env-validator-mcp
+  gosec:
+    excludes:
+      # G204: subprocess launched with variable — intentional in tool_checker.go
+      - G204
+
+issues:
+  exclude-rules:
+    # Don't enforce errcheck on test files (mock assertions return errors we intentionally ignore)
+    - path: "_test\\.go"
+      linters:
+        - errcheck
+        - gosec
+    # Allow unused parameters in interface implementations
+    - linters:
+        - revive
+      text: "unused-parameter"
+  max-same-issues: 0
+  max-issues-per-linter: 0

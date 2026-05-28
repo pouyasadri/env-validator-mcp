@@ -1,0 +1,101 @@
+version: 2
+
+project_name: env-validator-mcp
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: env-validator-mcp
+    main: ./cmd/server
+    binary: env-validator-mcp
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -w -s
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      # Windows ARM64 is rare — skip it
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: default
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: "🚀 Features"
+      regexp: '^feat'
+      order: 0
+    - title: "🐛 Bug Fixes"
+      regexp: '^fix'
+      order: 1
+    - title: "🔧 Improvements"
+      regexp: '^(chore|refactor|perf|ci|docs)'
+      order: 2
+    - title: "Other"
+      order: 999
+  filters:
+    exclude:
+      - "^Merge"
+      - "^WIP"
+
+release:
+  github:
+    owner: pouyasadri
+    name: env-validator-mcp
+  name_template: "v{{ .Version }}"
+  header: |
+    ## env-validator-mcp {{ .Tag }}
+
+    An MCP server that inspects your local development environment and reports
+    missing dependencies and misconfigured environment variables to any AI assistant.
+
+    ### Installation
+
+    Download the binary for your platform below, make it executable, and add it
+    to your `$PATH`. Then configure your MCP client (Claude Desktop, Cursor, etc.)
+    to use it.
+
+    **macOS / Linux:**
+    ```bash
+    # Extract and install
+    tar -xzf env-validator-mcp_{{ .Version }}_<os>_<arch>.tar.gz
+    chmod +x env-validator-mcp
+    sudo mv env-validator-mcp /usr/local/bin/
+    ```
+
+    **Claude Desktop config** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+    ```json
+    {
+      "mcpServers": {
+        "env-validator": {
+          "command": "/usr/local/bin/env-validator-mcp"
+        }
+      }
+    }
+    ```
